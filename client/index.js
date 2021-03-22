@@ -12,7 +12,8 @@ const MY_FAVORITE_BRANDS = [{
 }, {
   'name': 'ADRESSE',
   'url': 'https://adresse.paris/'
-}]
+    }]
+
 
 console.table(MY_FAVORITE_BRANDS);
 console.log(MY_FAVORITE_BRANDS[0]);
@@ -34,6 +35,9 @@ console.log(MY_FAVORITE_BRANDS[0]);
 // I can find on these e-shops
 // 2. Log the variable
 
+const CHEAPEST_T_SHIRT = 'https://adresse.paris/chemises/3980-t-shirt-jasmin-1300000259132.html'
+console.log(CHEAPEST_T_SHIRT);
+
 
 
 
@@ -50,35 +54,48 @@ console.log(MY_FAVORITE_BRANDS[0]);
 // 🎯 TODO: Number of products
 // 1. Create a variable and assign it the number of products
 // 2. Log the variable
-
+const NumberOfProduct = marketplace.length;
+console.log(NumberOfProduct);
 
 // 🎯 TODO: Brands name
 // 1. Create a variable and assign it the list of brands name only
 // 2. Log the variable
 // 3. Log how many brands we have
-
+const brandlist = marketplace.map(product => product.brand);
+console.log([...new Set(brandlist)]);
 
 // 🎯 TODO: Sort by price
 // 1. Create a function to sort the marketplace products by price
 // 2. Create a variable and assign it the list of products by price from lowest to highest
 // 3. Log the variable
+function SortPrice(a, b) {return a.price - b.price;}
+const ProductPrice = marketplace.sort(SortPrice);
+console.log(ProductPrice);
 
 
 // 🎯 TODO: Sort by date
 // 1. Create a function to sort the marketplace objects by products date
 // 2. Create a variable and assign it the list of products by date from recent to old
 // 3. Log the variable
-
+function SortDate(a, b) { return new Date(b.date) - new Date(a.date); }
+const ProductDate = marketplace.sort(SortDate);
+console.log(ProductDate);
 
 // 🎯 TODO: Filter a specific price range
 // 1. Filter the list of products between 50€ and 100€
 // 2. Log the list
-
+console.log(marketplace.filter(function (a) { return (a.price >= 50) && (a.price <= 100) }));
 
 // 🎯 TODO: Average Basket
 // 1. Determine the average basket of the marketplace
 // 2. Log the average
-
+function AverageBasket(list, sum = 0) {
+    for (var i = 0; i < list.length; i++) {
+        sum = sum + list[i].price;
+    }
+    return sum / list.length;
+}
+console.log(AverageBasket(marketplace));
 
 
 
