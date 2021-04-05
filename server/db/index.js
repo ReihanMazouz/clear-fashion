@@ -4,7 +4,7 @@ const fs = require('fs');
 
 const MONGODB_DB_NAME = 'clearfashion';
 const MONGODB_COLLECTION = 'products';
-const MONGODB_URI = process.env.MONGODB_URI;
+const MONGODB_URI = "mongodb+srv://dbUser:Buzenval1998@clear-fashion.jifhj.mongodb.net/retryWrites=true&w=majority";
 
 let client = null;
 let database = null;
@@ -60,19 +60,32 @@ module.exports.insert = async products => {
  * @param  {Array}  query
  * @return {Array}
  */
-module.exports.find = async query => {
+ module.exports.find = async (query,pages,limit) => {
   try {
+    skips = limit * (pages - 1)
     const db = await getDB();
     const collection = db.collection(MONGODB_COLLECTION);
-    const result = await collection.find(query).toArray();
-
-    return result;
+    const result = await collection.find(query).sort({price:1}).skip(skips).limit(limit).toArray();
+    const meta=await collection.countDocuments();
+    //console.log(result)
+    return {result,meta};
   } catch (error) {
     console.error('🚨 collection.find...', error);
     return null;
   }
 };
-
+module.exports.querydata = async function (query){
+  try {
+      const db = await getDB()
+      const collection = db.collection(MONGODB_COLLECTION);
+      const result = await collection.find(query).toArray();
+      return result
+    } 
+    catch(error){
+        console.error('Failed to get the query.',error);
+        return null;
+    }
+  }
 /**
  * Close the connection
  */
