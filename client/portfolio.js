@@ -1,8 +1,6 @@
 // Invoking strict mode https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Strict_mode#invoking_strict_mode
 'use strict';
 
-
-
 // current products on the page
 let currentProducts = [];
 let currentPagination = {};
@@ -10,37 +8,56 @@ let currentPagination = {};
 // inititiqte selectors
 const selectShow = document.querySelector('#show-select');
 const selectPage = document.querySelector('#page-select');
-const selectBrands = document.querySelector('#brand-select');
 const sectionProducts = document.querySelector('#products');
 const spanNbProducts = document.querySelector('#nbProducts');
-const selectSort = document.querySelector('#sort-select');
-const NbProducts = document.querySelector('#nbProducts');
+const selectBrand = document.querySelector('#brand-select');
+const goodprice = document.querySelector('#goodprice');
+const filter_price = document.querySelector('#filter-price');
+const selectSort= document.querySelector('#sort-select');
+const pricegraph = document.querySelector("#pricedistrib");
+const fav_list = document.querySelector('#render-fav');
+const prod_list = document.querySelector('#render-products');
+const hide_indic = document.querySelector('#hide-indicators');
+const indic = document.querySelector('#indic')
 /**
  * Set global value
  * @param {Array} result - products to display
  * @param {Object} meta - pagination meta info
  */
-const setCurrentProducts = ({result, meta}) => {
-  currentProducts = result;
+const setCurrentProducts = ({products, meta}) => {
+  currentProducts = products;
   currentPagination = meta;
 };
-
 /**
  * Fetch products from api
  * @param  {Number}  [page=1] - current page to fetch
  * @param  {Number}  [size=12] - size of the page
  * @return {Object}
  */
-const fetchProducts = async (page = 1, size = 12) => {
+let myproducts = [];
+let mypagination = {};
+
+const setmyProducts = ({result, meta}) => {
+  myproducts = result;
+  mypagination = meta;
+};
+
+const fetchProducts = async (page = 1, size = 12, brand = null, price = null, sort = 1) => {
   try {
-    const response = await fetch(`https://clear-fashion-api.vercel.app?page=${page}&size=${size}`);
+    let URL = `https://server-mauve-two.vercel.app/products/search?sort=${sort}&limit=${size}&page=${page}&`;
+    if(brand) {
+      URL += `brand=${brand}&`;
+    }
+    if(price) {
+      URL += `price=${price}&`;
+    }
+    const response = await fetch(URL);
     const body = await response.json();
 
-    if (body.success !== true) {
+    if (body.page !== true) {
       console.error(body);
       return {currentProducts, currentPagination};
     }
-    
     return body.data;
   } catch (error) {
     console.error(error);
@@ -53,90 +70,132 @@ const fetchProducts = async (page = 1, size = 12) => {
  * @param  {Array} products
  */
 const renderProducts = products => {
-  const fragment = document.createDocumentFragment();
-  const div = document.createElement('div');
   const template = products
     .map(product => {
-      return `
-      <div class="product" id=${product.uuid}>
-        <span>${product.brand}</span>
-        <a href="${product.link}">${product.name}</a>
-        <span>${product.price}</span>
-      </div>
+      if (localStorage.getItem(product._id)) {
+        return `
+        <div class="product-card" id=${product._id}>
+          <div class="product-image">
+            <a href="${product.link} target="_blank">
+              <img src="${product.image}">
+            </a>
+          </div>
+          <div class="product-info">
+            <span><b>${product.brand}</b></span>
+            <a class="prodname" href="${product.link}" target="_blank">${product.name}</a>
+            <p>${product.price}€</p>
+          </div>
+            <svg class="ico liked" width="24" height="24" viewBox="0 0 24 24">
+              <path d="M12,21.35L10.55,20.03C5.4,15.36 2,12.27 2,8.5C2,5.41 4.42,3 7.5,3C9.24,3 10.91,3.81 12,5.08C13.09,3.81 14.76,3 16.5,3C19.58,3 22,5.41 22,8.5C22,12.27 18.6,15.36 13.45,20.03L12,21.35Z"></path>
+            </svg>
+        </div>
     `;
+  } else {
+    return `
+        <div class="product-card" id=${product._id}>
+          <div class="product-image">
+            <a href="${product.link}" target="_blank">
+              <img src="${product.image}">
+            </a>
+          </div>
+          <div class="product-info">
+            <span><b>${product.brand}</b></span>
+            <a class="prodname" href="${product.link}" target="_blank">${product.name}</a>
+            <p>${product.price}€</p>
+          </div>
+            <svg class="ico" width="24" height="24" viewBox="0 0 24 24">
+              <path d="M12,21.35L10.55,20.03C5.4,15.36 2,12.27 2,8.5C2,5.41 4.42,3 7.5,3C9.24,3 10.91,3.81 12,5.08C13.09,3.81 14.76,3 16.5,3C19.58,3 22,5.41 22,8.5C22,12.27 18.6,15.36 13.45,20.03L12,21.35Z"></path>
+            </svg>
+        </div>
+    `;
+  }
     })
     .join('');
 
-  div.innerHTML = template;
-  fragment.appendChild(div);
-  sectionProducts.innerHTML = '<h2>Products</h2>';
-  sectionProducts.appendChild(fragment);
+  sectionProducts.innerHTML = template;
 };
 
-//Feature 2
-const renderBrands = currentProducts => {
-  try {
-    let brands = [''];
-    let brands_html = "";
-    brands_html += `<option value="All">All</option>`
-    for(let i = 0; i<currentProducts.length; i++){      
-      if(brands.indexOf(currentProducts[i].brand) == -1){        
-        brands.push(currentProducts[i].brand);
-        brands_html += `<option value="${currentProducts[i].brand}">${currentProducts[i].brand}</option>`
-      }
-    }
-    selectBrands.innerHTML = brands_html;
+
+const addfav = (id) => {
+  if (localStorage.getItem(id)) {
+    localStorage.removeItem(id);
+  } else {
+    localStorage.setItem(id, JSON.stringify(currentProducts.find(element => element._id === id)));
   }
-  catch (error) {
-    console.error(error);
-  }  
 }
-
-function filterBrands(currentProducts, filterBrand){
-  if(filterBrand != 'All'){
-    let filteredProducts = [];
-    for(let i = 0; i < currentProducts.length; i++){
-      if(currentProducts[i].brand == filterBrand){
-        filteredProducts.push(currentProducts[i]);
-      }
-    }
-    renderProducts(filteredProducts);
-  }else {
-    renderProducts(currentProducts);
-  } 
-}
-
 /**
  * Render page selector
  * @param  {Object} pagination
  */
 const renderPagination = pagination => {
-  const {currentPage, pageCount} = pagination;
+  const num_page = pagination.num_page
   const options = Array.from(
-    {'length': pageCount},
+    {'length': Math.ceil(num_page)},
     (value, index) => `<option value="${index + 1}">${index + 1}</option>`
   ).join('');
 
   selectPage.innerHTML = options;
-  selectPage.selectedIndex = currentPage - 1;
+  selectPage.selectedIndex = pagination.currentPage - 1;
 };
+
+
+
+const render_filter = pagination => {
+  const extremas = pagination.extremas[0];
+  const min = parseInt(extremas.min)+1;
+  const max = parseInt(extremas.max)+1;
+  filter_price.setAttribute("min", min);
+  filter_price.setAttribute("max", max);
+}
+
 
 /**
  * Render page selector
  * @param  {Object} pagination
  */
 const renderIndicators = pagination => {
-  const {count} = pagination;
+  const {total_count, price_list} = pagination;
+  spanNbProducts.innerHTML = total_count;
 
-  spanNbProducts.innerHTML = count;
+  const prices_list = Array.from(price_list,
+    (value, index) => value.price);
 };
 
+/**
+* Render brand selector
+*/
+const renderbrands= pagination =>{
+
+  let brands = [""]
+  brands.push(...pagination.brand_list)
+  const options2 = Array.from(
+    {'length': brands.length},
+    (value, index) => `<option value="${brands[index]}">${brands[index]}</option>`
+  ).join('');
+/*indique le contenu et à qu'elle valeur on veut commencer*/
+  selectBrand.innerHTML=options2;
+  const brand_index = brands.indexOf(pagination.currentbrand)
+  selectBrand.selectedIndex = brand_index;
+};
+
+
 const render = (products, pagination) => {
+  renderbrands(pagination);
   renderProducts(products);
   renderPagination(pagination);
   renderIndicators(pagination);
-  renderBrands(currentProducts);
+  render_filter(pagination);
 };
+
+const render_like_button = function() {
+  var likes_Btn = document.querySelectorAll('.ico');
+  likes_Btn.forEach((button) => {
+    var id = button.parentElement.id
+    button.addEventListener('click', function() {
+      addfav(id);
+      button.classList.toggle('liked') })
+  })
+}
 
 /**
  * Declaration of all Listeners
@@ -146,122 +205,115 @@ const render = (products, pagination) => {
  * Select the number of products to display
  * @type {[type]}
  */
+
+goodprice.addEventListener('change', (event) => {
+  if (goodprice.checked) {
+    if (selectSort.value ==="default") {
+    fetchProducts(currentPagination.currentPage, currentPagination.pageSize, currentPagination.currentbrand, filter_price.value)
+      .then(setCurrentProducts)
+      .then(()=> render(currentProducts, currentPagination))
+      .then(()=> render_like_button())
+  } else {
+    fetchProducts(currentPagination.currentPage, currentPagination.pageSize, currentPagination.currentbrand, filter_price.value, -1)
+      .then(setCurrentProducts)
+      .then(()=> render(currentProducts, currentPagination))
+      .then(()=> render_like_button())
+  } }
+  else { if (selectSort.value ==="default") {
+    fetchProducts(currentPagination.currentPage, currentPagination.pageSize, currentPagination.currentbrand, null)
+      .then(setCurrentProducts)
+      .then(()=> render(currentProducts, currentPagination))
+  } else {
+     fetchProducts(currentPagination.currentPage, currentPagination.pageSize, currentPagination.currentbrand, null, -1)
+      .then(setCurrentProducts)
+      .then(()=> render(currentProducts, currentPagination))
+      .then(()=> render_like_button())
+  }}
+});
+
+filter_price.addEventListener('change', event => {
+  if (goodprice.checked) {
+    if (selectSort.value==="default") {
+    fetchProducts(currentPagination.currentPage, currentPagination.pageSize, currentPagination.currentbrand, event.target.value)
+      .then(setCurrentProducts)
+      .then(()=> render(currentProducts, currentPagination))
+      .then(()=> render_like_button())
+  } else {
+    fetchProducts(currentPagination.currentPage, currentPagination.pageSize, currentPagination.currentbrand, event.target.value, -1)
+      .then(setCurrentProducts)
+      .then(()=> render(currentProducts, currentPagination))
+      .then(()=> render_like_button())
+  } }
+});
+
+
+selectBrand.addEventListener('change', event => {
+  if (selectSort.value === "default") {
+  fetchProducts(1, currentPagination.pageSize, event.target.value, currentPagination.currentprice)
+    .then(setCurrentProducts)
+    .then(() => render(currentProducts, currentPagination))
+    .then(()=> render_like_button());
+  } else {
+    fetchProducts(1, currentPagination.pageSize, event.target.value, currentPagination.currentprice,-1)
+    .then(setCurrentProducts)
+    .then(() => render(currentProducts, currentPagination))
+    .then(()=> render_like_button());
+  }
+});
+
+
 selectShow.addEventListener('change', event => {
-  fetchProducts(currentPagination.currentPage, parseInt(event.target.value))
+  fetchProducts(currentPagination.currentPage, parseInt(event.target.value), currentPagination.currentbrand, currentPagination.currentprice, currentPagination.currentSort)
     .then(setCurrentProducts)
-    .then(() => render(currentProducts, currentPagination));
+    .then(() => render(currentProducts, currentPagination))
+    .then(()=> render_like_button());
 });
 
-//Feature 1
+
 selectPage.addEventListener('change', event => {
-  fetchProducts(parseInt(event.target.value), selectShow.value)
+  fetchProducts(parseInt(event.target.value), currentPagination.pageSize, currentPagination.currentbrand, currentPagination.currentprice, currentPagination.currentSort)
     .then(setCurrentProducts)
-    .then(() => render(currentProducts, currentPagination));
+    .then(() => render(currentProducts, currentPagination))
+    .then(()=> render_like_button());
 });
 
-//Feature 2
 
-selectBrands.addEventListener('change', event => {
-    (SortChoice(currentProducts, selectSort.value));
-});
+
+selectSort.addEventListener('change', event => {
+  let sort=1;
+  if(event.target.value==="price-desc"){sort = -1}
+  fetchProducts(currentPagination.currentPage, currentPagination.pageSize, currentPagination.currentbrand, currentPagination.currentprice, sort)
+    .then(setCurrentProducts)
+    .then(() => render(currentProducts, currentPagination))
+    .then(()=> render_like_button());
+})
+
+fav_list.addEventListener('click', event => {
+  let fav_products = []
+  for(let i=0; i<localStorage.length; i++) {
+    fav_products.push(JSON.parse(localStorage.getItem(localStorage.key(i))));
+  }
+  render(fav_products, currentPagination);
+  render_like_button();
+})
+
+prod_list.addEventListener('click', event => {
+  render(currentProducts, currentPagination);
+  render_like_button();
+})
+
+hide_indic.addEventListener('click', event => {
+  if (indic.style.display=='block') {
+    hide_indic.firstElementChild.firstElementChild.className = "arrow down"
+    indic.style.display = 'none'
+  } else {
+    indic.style.display = 'block'
+    hide_indic.firstElementChild.firstElementChild.className = "arrow up"
+  }
+}, false)
 
 document.addEventListener('DOMContentLoaded', () =>
   fetchProducts()
     .then(setCurrentProducts)
     .then(() => render(currentProducts, currentPagination))
-);
-// Feature 
-// Feature 3,4,5 and 6
-
-function SortChoice(currentProducts,selecSort){
-  if (selectSort.value == 'date-desc')
-   SortDate(currentProducts,'desc');
-  if (selectSort.value == 'date-asc')
-    SortDate(currentProducts,'asc');
-  if (selectSort.value == 'price-asc')
-    SortPrice(currentProducts,'desc');
-  if (selectSort.value == 'price-desc')
-    SortPrice(currentProducts,'asc');
-  if (selectSort.value == 'affordable')
-    SortAffordable(currentProducts);
-  if (selectSort.value == 'new-released')
-    SortRecent(currentProducts);
-}
-
-function SortAffordable(currentProducts){
-  let affordableproducts = [];
-  for(let i = 0; i < currentProducts.length; i++){
-    if(currentProducts[i].price < 50){
-      affordableproducts.push(currentProducts[i]);
-    }
-  }
-  filterBrands(affordableproducts, selectBrands.value);
-}
-function SortRecent(currentProducts){
-  var date = new Date();
-  let RecentProducts = [];
-  for(let i = 0; i < currentProducts.length; i++){
-    var DateProduct = new Date(currentProducts[i].released);
-    if(date - DateProduct< 86400*15000){
-      RecentProducts.push(currentProducts[i]);
-    }
-  }
-  filterBrands(RecentProducts, selectBrands.value);
-}
-function compareDatedesc(a,b){
-  if(a.released < b.released)
-   return -1;
-  if(a.released > b.released)
-   return 1;
-  return 0;
-}
-function compareDateasc(a,b){
-  if(a.released < b.released)
-   return 1;
-  if(a.released > b.released)
-   return -1;
-  return 0;
-}
-function comparePricedesc(a,b){
-  if(a.price < b.price)
-   return -1;
-  if(a.price > b.price)
-   return 1;
-  return 0;
-}
-function comparePriceasc(a,b){
-  if(a.price < b.price)
-   return 1;
-  if(a.price > b.price)
-   return -1;
-  return 0;
-}
-
-function SortDate(currentProducts,type){
-  if(type == 'desc'){
-    let sortedProducts = currentProducts.sort(compareDatedesc);
-    filterBrands(sortedProducts,selectBrands.value);
-  }
-
-  else{
-    let sortedProducts = currentProducts.sort(compareDateasc);
-    filterBrands(sortedProducts,selectBrands.value);
-  }
-
-
-}
-function SortPrice(currentProducts,type){
-  if(type == 'desc'){
-    let sortedProducts = currentProducts.sort(comparePricedesc);
-    filterBrands(sortedProducts,selectBrands.value);
-  }
-  else{
-    let sortedProducts = currentProducts.sort(comparePriceasc);
-    filterBrands(sortedProducts,selectBrands.value);
-  }
-
-}
-
-selectSort.addEventListener('change', event => {
-  SortChoice(currentProducts, event.target.value);
-});
+    .then(()=> render_like_button()));

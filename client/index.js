@@ -12,8 +12,7 @@ const MY_FAVORITE_BRANDS = [{
 }, {
   'name': 'ADRESSE',
   'url': 'https://adresse.paris/'
-    }]
-
+}]
 
 console.table(MY_FAVORITE_BRANDS);
 console.log(MY_FAVORITE_BRANDS[0]);
@@ -34,11 +33,8 @@ console.log(MY_FAVORITE_BRANDS[0]);
 // 1. Create a new variable and assign it the link of the cheapest t-shirt
 // I can find on these e-shops
 // 2. Log the variable
-
-const CHEAPEST_T_SHIRT = 'https://adresse.paris/chemises/3980-t-shirt-jasmin-1300000259132.html'
-console.log(CHEAPEST_T_SHIRT);
-
-
+var cheapest_shirt = 'https://www.loom.fr/products/le-t-shirt'
+console.log(cheapest_shirt);
 
 
 
@@ -54,51 +50,75 @@ console.log(CHEAPEST_T_SHIRT);
 // 🎯 TODO: Number of products
 // 1. Create a variable and assign it the number of products
 // 2. Log the variable
-const NumberOfProduct = marketplace.length;
-console.log(NumberOfProduct);
+var prod_num = marketplace.length
+console.log(prod_num);
 
 // 🎯 TODO: Brands name
 // 1. Create a variable and assign it the list of brands name only
 // 2. Log the variable
 // 3. Log how many brands we have
-const brandlist = marketplace.map(product => product.brand);
-console.log([...new Set(brandlist)]);
+var brand_list = []
+marketplace.forEach(function(item) {
+	if (brand_list.includes(item.brand) == false)
+	{
+		brand_list.push(item.brand);
+	}
+
+});
+console.table(brand_list);
+console.log(brand_list.length);
+
 
 // 🎯 TODO: Sort by price
 // 1. Create a function to sort the marketplace products by price
 // 2. Create a variable and assign it the list of products by price from lowest to highest
 // 3. Log the variable
-function SortPrice(a, b) {return a.price - b.price;}
-const ProductPrice = marketplace.sort(SortPrice);
-console.log(ProductPrice);
+function compare_price(a,b) {
+	if (a.price < b.price)
+		return -1;
+	if(a.price > b.price)
+		return 1;
+	return 0
+}
 
+var price_sorted_mkplace = marketplace.sort(compare_price);
+console.table(price_sorted_mkplace);
 
 // 🎯 TODO: Sort by date
 // 1. Create a function to sort the marketplace objects by products date
 // 2. Create a variable and assign it the list of products by date from recent to old
 // 3. Log the variable
-function SortDate(a, b) { return new Date(b.date) - new Date(a.date); }
-const ProductDate = marketplace.sort(SortDate);
-console.log(ProductDate);
+function compare_date(a,b) {
+	var a_date = new Date(a.date)
+	var b_date = new Date(b.date)
+	if (a_date < b_date)
+		return -1;
+	if (a_date > b_date)
+		return 1;
+	return 0;
+}
+var date_sorted_mkplace = marketplace.sort(compare_date);
+console.table(date_sorted_mkplace);
 
 // 🎯 TODO: Filter a specific price range
 // 1. Filter the list of products between 50€ and 100€
 // 2. Log the list
-console.log(marketplace.filter(function (a) { return (a.price >= 50) && (a.price <= 100) }));
+function between_50_100(item){
+	return(item.price>50 && item.price<100);
+}
+var filtered_array = marketplace.filter(between_50_100);
+console.table(filtered_array);
 
 // 🎯 TODO: Average Basket
 // 1. Determine the average basket of the marketplace
 // 2. Log the average
-function AverageBasket(list, sum = 0) {
-    for (var i = 0; i < list.length; i++) {
-        sum = sum + list[i].price;
-    }
-    return sum / list.length;
+var total_sum = 0;
+for (var item of marketplace) {
+	total_sum += item.price;
 }
-console.log(AverageBasket(marketplace));
 
-
-
+var avg_price = total_sum/marketplace.length;
+console.log(avg_price);
 
 /**
  * 🏎
@@ -122,7 +142,12 @@ console.log(AverageBasket(marketplace));
 //
 // 2. Log the variable
 // 3. Log the number of products by brands
-
+const brands = {};
+for (var brand_index of brand_list) {
+	var prod_list = marketplace.filter(function (i, n) {return n.name==brand_index});
+	brands.push(brand_index : prod_list);
+}
+console.table(brands);
 
 // 🎯 TODO: Sort by price for each brand
 // 1. For each brand, sort the products by price, from highest to lowest

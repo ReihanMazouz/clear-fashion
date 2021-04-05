@@ -3,68 +3,68 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>👕 Clear Fahion | Environmentally & human-friendly clothes</title>
+    <link rel="stylesheet" type="text/css" href="index_css.css">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
   </head>
   <body>
-    <h1>Clear fashion</h1>
-    <section id="options">
-      <div id="show">
-        <label for="show-select">Show:</label>
-        <select name="show" id="show-select">
-          <option value="12">12</option>
-          <option value="24">24</option>
-          <option value="48">48</option>
-        </select>
-      </div>
-      <div id="page">
-        <label for="page-select">Go to page:</label>
-        <select name="page" id="page-select"> </select>
-      </div>
-      <div id="filters">
-        <span>By reasonable price</span>
-        <span>By recently released</span>
-        <div id="brand">
-          <label for="brand-select">By brands:</label>
-          <select name="brand" id="brand-select"> </select>
+    <nav>
+        <h2>Clear Fashion API </h2>
+<!--       <h2>Filters</h2>
+ -->      <section id="options" class="filter-container">
+            <div id="price">
+            <input type="checkbox" id="goodprice" name="reasonableprice">
+            <label for="goodprice">Filter by price</label>
+            <input type="range" id="filter-price" name="price_filter" value="30" oninput="this.nextElementSibling.value = this.value">
+            <output>30</output>
         </div>
-      </div>
-      <div id="sort">
-        <label for="sort-select">Sort:</label>
-        <select name="sort" id="sort-select">
-          <option value="price-asc">Cheaper</option>
-          <option value="price-desc">Expensive</option>
-          <option value="date-asc">Recently released</option>
-          <option value="date-desc">Anciently released</option>
-        </select>
-      </div>
-    </section>
+          <div id="brand">
+            <label for="brand-select">By brands:</label>
+            <select name="brand" id="brand-select"> </select>
+          </div>
+        <div id="sort">
+          <label for="sort-select">Sort:</label>
+          <select name="sort" id="sort-select">
+            <option value="default">Price ascending</option>
+            <option value="price-desc">Price descending</option>
+          </select>
+        </div>
+        <div id="show">
+          <label for="show-select">Number of product to display :</label>
+          <select name="show" id="show-select">
+            <option value="12">12</option>
+            <option value="24">24</option>
+            <option value="48">48</option>
+          </select>
+        </div>
+        <div id="page">
+          <label for="page-select">Go to page:</label>
+          <select name="page" id="page-select"> </select>
+        </div>
+      </section>
+    </nav>
     <section id="indicators">
-      <h2>Indicators</h2>
-      <div>
-        <span>Number of products</span>
-        <span id="nbProducts">0</span>
+      <a href="#" id="hide-indicators" style="text-decoration: none; color: inherit;">
+        <!-- <h2>Indicators <i class="arrow up"></i></h2> -->
+      </a>
+      <!-- <div id="indic" style="position:relative;display:block">
+        <div>
+          <span>Number of products :</span>
+          <span id="nbProducts">0</span>
+        </div>
+      <div id="price-distrib" style="height:350px">
       </div>
-      <div>
-        <span>Number of new products</span>
-        <span>0</span>
-      </div>
-      <div>
-        <span>p50 price value</span>
-        <span>0</span>
-      </div>
-      <div>
-        <span>p90 price value</span>
-        <span>0</span>
-      </div>
-      <div>
-        <span>p95 price value</span>
-        <span>0</span>
-      </div>
-      <div>
-        <span>Last released date</span>
-        <span>2020-01-01</span>
-      </div>
+      <script type="text/javascript" id="price_graph" src="price_graph.js" async="true"></script>
+    </div> -->
     </section>
-    <section id="products"></section>
+    <div class="prod-choice-cont">
+      <a href="#" class="cta" id="render-products">
+        <span>Products</span>
+      </a>
+      <a href="#" class="cta" id="render-fav">
+        <span>Favorites</span>
+      </a>
+  </div>
+    <section id="products" class="products-container"></section>
     <script type="text/javascript" charset="UTF-8" src="portfolio.js"></script>
   </body>
 </html>
