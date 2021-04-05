@@ -1,7 +1,7 @@
 const cors = require('cors');
 const express = require('express');
 const helmet = require('helmet');
-const db= require('./db/index.js')
+const db = require('./db/index');
 
 const PORT = 8092;
 
@@ -18,40 +18,23 @@ app.options('*', cors());
 app.get('/', (request, response) => {
   response.send({'ack': true});
 });
-app.get('/products/:id',async (request,response)=>{
-  id=request.params.id;
-  res=await db.find({id},1,1);
-  if(res.result.length>0){
-  console.log(res.result);
-  response.send(res.result);
-  }
-  else{
-    console.log("id not found")
-    response.send({"res":"id not found"});
-  }
-})
-app.get('/products', async (req, res) => {
-  //response.send({'a': true});
-  let page = parseInt(req.query.page);
-  let size = parseInt(req.query.size);
-  let start = (size*(page-1));
-  console.log("start= "+start);
-  console.log("end=" +start + size);
-  let prod = []
-  let counter = 0;
-  const result = await db.querydata({"price":{$ne:Number("Nan")}})
 
-  for(i=start;i<start+size;i++){
-      if(result[i] != null){
-        console.log(i+' '+result[i].price)
-        prod.push(result[i])
-        counter++;
+app.get('/products', async(request, response) => {
+  let brand = request.query.brand || null;
+  let price = parseInt(request.query.price) || null;
+  let limit = parseInt(request.query.limit) || 12;
 
-      }
-
-    }
-  console.log(counter);
-  res.send({"success":true,"data":{"result":prod,"meta":{"currentPage":page,"pageCount":Math.round(result.length/size),"pageSize":size,"count":result.length}}});
+  const result = await db.findByBrand(brand, price, limit);
+  response.send({
+    'limit':limit,
+    'total':result.length,
+    'result': result});
 });
+
+app.get('/products/:id', async(request, response) => {
+  response.send(await db.findById(request.params.id));
+});
+
+
 app.listen(PORT);
 console.log(`📡 Running on port ${PORT}`);

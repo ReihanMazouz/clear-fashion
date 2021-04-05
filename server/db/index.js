@@ -1,10 +1,10 @@
-require('dotenv').config();
+//require('dotenv').config();
 const {MongoClient} = require('mongodb');
 const fs = require('fs');
 
-const MONGODB_DB_NAME = 'clearfashion';
+const MONGODB_DB_NAME = 'clear-fashion';
 const MONGODB_COLLECTION = 'products';
-const MONGODB_URI = "mongodb+srv://dbUser:Buzenval1998@clear-fashion.jifhj.mongodb.net/retryWrites=true&w=majority";
+const MONGODB_URI = 'mongodb+srv://reihan:omate974@clear-fashion.4e5rl.mongodb.net/clear-fashion?retryWrites=true&w=majority';
 
 let client = null;
 let database = null;
@@ -21,7 +21,7 @@ const getDB = module.exports.getDB = async () => {
     }
 
     client = await MongoClient.connect(MONGODB_URI, {'useNewUrlParser': true});
-    database = client.db(MONGODB_DB_NAME);
+    database =  client.db(MONGODB_DB_NAME)
 
     console.log('💽  Connected');
 
@@ -60,32 +60,100 @@ module.exports.insert = async products => {
  * @param  {Array}  query
  * @return {Array}
  */
- module.exports.find = async (query,pages,limit) => {
+module.exports.find = async (query, limit, page) => {
   try {
-    skips = limit * (pages - 1)
     const db = await getDB();
     const collection = db.collection(MONGODB_COLLECTION);
-    const result = await collection.find(query).sort({price:1}).skip(skips).limit(limit).toArray();
-    const meta=await collection.countDocuments();
-    //console.log(result)
-    return {result,meta};
+    const result = await collection.find(query).sort({price:1, _id:1}).limit(limit).skip((page - 1) * limit).toArray();
+    const number_doc = await collection.countDocuments();
+    return [result, number_doc];
   } catch (error) {
     console.error('🚨 collection.find...', error);
     return null;
   }
 };
-module.exports.querydata = async function (query){
-  try {
-      const db = await getDB()
-      const collection = db.collection(MONGODB_COLLECTION);
-      const result = await collection.find(query).toArray();
-      return result
-    } 
-    catch(error){
-        console.error('Failed to get the query.',error);
-        return null;
+
+module.exports.findById = async id => {
+  try{
+    const db = await getDB();
+    const collection = db.collection(MONGODB_COLLECTION);
+    const result = await collection.find({'_id':id}).toArray();
+
+    return result;
     }
+    catch (error) {
+    console.error('🚨 collection.find...', error);
+    return null;
+  }  
+}
+
+module.exports.length = async() => {
+  try {
+    const db = await getDB();
+    const collection = db.collection(MONGODB_COLLECTION);
+    let length = await collection.countDocuments()
+    return length;
+  } catch(e) {
+    console.error('🚨 collection.find...', error);
+    return null;
   }
+};
+
+module.exports.findByBrand = async (brand = null, price = null, limit = 12) => {
+  try {
+    const db = await getDB();
+    const collection = db.collection(MONGODB_COLLECTION);
+    if (brand == null && price == null)
+    {
+      const result = await collection.find({'price':{$gte:0}}).sort({'price':1}).limit(limit).toArray();
+      return result;
+    }
+    else if (price == null)
+    {
+      const result = await collection.find({'brand':brand, 'price':{$gte:0}}).sort({'price':1}).limit(limit).toArray();
+      return result;
+    }
+    else if (brand == null)
+    {
+      const result = await collection.find({'price':{$lte:price, $gte:0}}).sort({'price':1}).limit(limit).toArray();
+      return result;
+    }
+    else
+    {
+      const result = await collection.find({'brand':brand, 'price':{$lte:price, $gte:0}}).sort({'price':1}).limit(limit).toArray();
+      return result;
+    }
+    
+  } catch(e) {
+    console.error('🚨 collection.find...', error);
+    return null;
+  }
+};
+
+module.exports.lower_than_price = async price => {
+  try {
+    const db = await getDB();
+    const collection = db.collection(MONGODB_COLLECTION);
+    const result = await collection.find({'price':{$lte:price}})
+    return result;
+  } catch(e) {
+    console.error('🚨 collection.find...', error);
+    return null;
+  }
+};
+
+module.exports.sorted_price = async() => {
+  try {
+    const db = await getDB();
+    const collection = db.collection(MONGODB_COLLECTION);
+    const result = await collection.sort({'price':1})
+    return result;
+  } catch(e) {
+    console.error('🚨 collection.find...', error);
+    return null;
+  }
+};
+
 /**
  * Close the connection
  */

@@ -1,6 +1,6 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
-const {'v5': uuidv5} = require('uuid');
+const DEDICATED_BRAND = "https://www.dedicatedbrand.com";
 
 /**
  * Parse webpage e-shop
@@ -12,28 +12,54 @@ const parse = data => {
 
   return $('.productList-container .productList')
     .map((i, element) => {
-      const link = `https://www.dedicatedbrand.com/${$(element)
-      .find('.productList-link')
-      .attr('href')}`;
-    const brand = "Dedicated"
-    const name = $(element)
-      .find('.productList-title')
-      .text()
-      .trim()
-      .replace(/\s/g, ' ');
-    const price = parseInt(
-      $(element)
-        .find('.productList-price')
-        .text());
-    const photo = $(element)
-        .find('.productList-image img')
-        .attr('src');
-    const id = uuidv5(link, uuidv5.URL);
-
-    return {id, brand, name, price, photo, link};
+      const link = `https://www.dedicatedbrand.com${$(element)
+        .find('.productList-link')
+        .attr('href')}`;
+      
+        return {
+          link,
+          'brand': 'dedicated',
+          'price': parseFloat(
+            $(element)
+              .find('.productList-price')
+              .text()
+          ),
+          'name': $(element)
+            .find('.productList-title')
+            .text()
+            .trim()
+            .replace(/\s/g, ' '),
+          'photo': $(element)
+            .find('.productList-image img')
+            .attr('src')
+        };
     })
     .get();
 };
+
+
+function parseHomepage (data){
+  const $ = cheerio.load(data);
+  return $('.mainNavigation-link-subMenu-link')
+    .map((i, element) => {
+      const href = $(element).find('a').attr('href');
+      return `${DEDICATED_BRAND}${href}`
+    })
+    .get();
+}
+
+module.exports.getPages = async (url = DEDICATED_BRAND) => {
+  const response = await axios(url);
+  const {data, status} = response;
+
+  if (status >= 200 && status < 300) {
+    return parseHomepage(data);
+  }
+
+  console.error(status);
+
+  return [];
+}
 
 /**
  * Scrape all the products for a given url page
@@ -53,7 +79,7 @@ module.exports.scrape_products = async url => {
   return null;
 };
 
- //Scrape all links on the welcome page of the website
+//Scrapeall links on the welcome page of the website
 module.exports.scrape_links = async url => {
   const response = await axios(url);
   const {data, status} = response;
@@ -67,17 +93,16 @@ module.exports.scrape_links = async url => {
   return null;
 };
 
-
 const parse_links = data => {
   const $ = cheerio.load(data);
 
   return $('.mainNavigation-fixedContainer .mainNavigation-link-subMenu-link')
-    .map((i, element) => {
+    .map((u, element) => {
       const link = $(element)
         .find('.mainNavigation-link-subMenu-link > a[href]')
         .attr('href')
-
-      return link;
+      
+        return link;
     })
     .get();
-}; 
+};

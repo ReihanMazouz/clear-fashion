@@ -1,151 +1,96 @@
-const fsLibrary  = require('fs') 
+/* eslint-disable no-console, no-process-exit */
+//const brands = require('./brands.json');
 const dedicatedbrand = require('./sources/dedicatedbrand');
-const toJsonFile = require('./sources/toJsonFile');
-const mudjeans = require('./sources/mudjeans');
-const adresseparis = require('./sources/adresseparis');
-const eshops = ['https://www.dedicatedbrand.com'];
-eshops.push('https://mudjeans.eu/');
-eshops.push('https://adresse.paris/');
-const {MongoClient} = require('mongodb');
-const MONGODB_URI = "mongodb+srv://dbUser:Buzenval1998@clear-fashion.jifhj.mongodb.net/retryWrites=true&w=majority";
-const MONGODB_DB_NAME = 'clearfashion';
+const mudjeansbrand = require('./sources/mudjeans');
+const adressebrand = require('./sources/adresseparis');
+const fs = require('fs');
+let allProducts = [];
 
-
-async function sandbox () {
+async function dedicated (eshop = 'https://www.dedicatedbrand.com') {
   try {
-    dedicated_products = await dedicated_scrapping(eshops[0]);
-   // mudjeans_products = await mudjeans_scrapping(eshops[1]);
+    const pages = await dedicatedbrand.getPages(eshop);
 
-    let allproducts = []
-    allproducts = dedicated_products;
-
-    //console.log(allproducts);
-
-    const client = await MongoClient.connect(MONGODB_URI, {'useNewUrlParser': true});
-    const db = client.db(MONGODB_DB_NAME)
-    const collection = db.collection('products');
-    const result = await collection.insertMany(allproducts);
-    console.log(result);
-
-    //await adresseparis_scrapping(eshops[2]);
-
-
-
-    console.log('All scrapping done');
-    process.exit(0);
-  }
-  catch(error){
-    console.error(error)
-  }
-}
-async function dedicated_scrapping(eshop, brand = 'DEDICATED') {
-  try {
-
-    let brand = 'DEDICATED';
-    console.log(`🕵️‍♀️  browsing ${eshop} source`);
+    console.log(`🛍️ ${pages.length} found`);
+    console.log(pages);
     
-    //Scrapping home page
-    let dedicated_products = await dedicatedbrand.scrape_products(eshop);
-    //toJsonFile.productToJsonFile(products, brand, false);
-    console.log(dedicated_products);
+    let nombreProduits = 0;
 
-    //Scrapping all menu links on home page
-    const links = await dedicatedbrand.scrape_links(eshop);
+    for (var i = 0; i < pages.length; i++) {
+      console.log(`🕵️‍♀️  browsing ${pages[i]} source`);
+      const products = await dedicatedbrand.scrape_products(pages[i]);
 
-    //Scrapping on all the links
-    for(let i = 0; i < links.length; i++){
-      actual_link = eshop + links[i];
-      console.log(actual_link);
-      products = await dedicatedbrand.scrape_products(actual_link);
-        //toJsonFile.productToJsonFile(products, brand)   
-      dedicated_products = dedicated_products.concat(products) 
+      console.log(`${products.length} items found`);
+      nombreProduits += products.length;
+      allProducts.push(products);
     }
-    return products
-    console.log('Dedicated srapping done');
-
+    
+    let data = JSON.stringify(allProducts);
+    fs.writeFileSync('dedicated.json', data);
+    console.log('All done!');
+    process.exit(0);
   } catch (e) {
     console.error(e);
     process.exit(1);
   }
 }
-async function mudjeans_scrapping(eshop, brand = 'MUDJEANS'){
-  try  {
-    console.log(`🕵️‍♀️  browsing ${eshop} source`);
 
-    //Scrapping home page
-    let mudjeans_product = await mudjeans.scrape_products(eshop);
-    //toJsonFile.productToJsonFile(products, brand,false);
-    console.log(mudjeans_product);
+async function mudjeans (eshop = 'https://mudjeans.eu') {
+  try {
+    const pages = await mudjeansbrand.getPages(eshop);
 
-    //Scrapping all menu links on home page
-    let links_duplicated = await mudjeans.scrape_links(eshop);
-    let links = [];
+    console.log(`🛍️ ${pages.length} found`);
+    console.log(pages);
+    
+    let nombreProduits = 0;
 
-    //Removing duplicates links
-    links_duplicated.forEach((link) => {
-      if(!links.includes(link)){
-        links.push(link);
-      }
-    })
+    for (var i = 0; i < pages.length; i++) {
+      console.log(`🕵️‍♀️  browsing ${pages[i]} source`);
+      const products = await mudjeansbrand.scrape_products(pages[i]);
 
-    //Scrapping on all the links
-    for(let i = 0; i < links.length; i++){
-      actual_link = eshop + links[i];
-      console.log(actual_link);
-      products = await mudjeans.scrape_products(actual_link);
-     // toJsonFile.productToJsonFile(products, brand);
-     mudjeans_product = mudjeans_product.concat(products);
+      console.log(`${products.length} items found`);
+      nombreProduits += products.length;
+      allProducts.push(products);
     }
-    return mudjeans_product
-    console.log('Mudjeans scrapping done');    
+    
+    let data = JSON.stringify(allProducts);
+    fs.writeFileSync('mudjeans.json', data);
+    console.log('All done!');
+    process.exit(0);
   } catch (e) {
     console.error(e);
     process.exit(1);
-  }  
+  }
 }
 
-async function adresseparis_scrapping(eshop, brand = 'ADRESSE PARIS'){
-  try  {
-    console.log(`🕵️‍♀️  browsing ${eshop} source`);
+async function adresse (eshop = 'https://adresse.paris') {
+  try {
+    const pages = await adressebrand.getPages(eshop);
 
-      //Scrapping home page
+    console.log(`🛍️ ${pages.length} found`);
+    console.log(pages);
+    
+    let nombreProduits = 0;
 
-      let products = await adresseparis.scrape_products(eshop);
-      toJsonFile.productToJsonFile(products, brand,false);
-      console.log(products);
-      
-         //Scrapping all menu links on home page
-    let links_duplicated = await adresseparis.scrape_links(eshop);
-    let links = [];
+    for (var i = 0; i < pages.length; i++) {
+      console.log(`🕵️‍♀️  browsing ${pages[i]} source`);
+      const products = await adressebrand.scrape_products(pages[i]);
 
-      //Removing duplicates links
-      links_duplicated.forEach((link) => {
-        if(!links.includes(link)){
-          links.push(link);
-        }
-      })
-  
-
-
-    //Scrapping on all the links
-    for(let i = 0; i < links.length; i++){
-      actual_link = links[i];
-      console.log(actual_link);
-      products = await adresseparis.scrape_products(actual_link);
-     // toJsonFile.productToJsonFile(products, brand);
+      console.log(`${products.length} items found`);
+      nombreProduits += products.length;
+      allProducts.push(products);
     }
-      console.log('Adresse Paris scrapping done');    
-    } catch (e) {
-      console.error(e);
-      process.exit(1);
-    } 
+    
+    let data = JSON.stringify(allProducts);
+    fs.writeFileSync('adresse.json', data);
+    console.log('All done!');
+    process.exit(0);
+  } catch (e) {
+    console.error(e);
+    process.exit(1);
+  }
 }
-
-
-
-
 
 const [,, eshop] = process.argv;
 
-
-sandbox(eshop);
+mudjeans();
+ 
