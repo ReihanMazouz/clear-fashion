@@ -1,36 +1,38 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
 const {'v5': uuidv5} = require('uuid');
-
 /**
  * Parse webpage e-shop
  * @param  {String} data - html response
  * @return {Array} products
  */
-const parse = data => {
+ const parse = data => {
   const $ = cheerio.load(data);
 
-  return $('.productList-container .productList')
+  return $('.product-link')
     .map((i, element) => {
-      const link = `https://www.dedicatedbrand.com/${$(element)
-      .find('.productList-link')
-      .attr('href')}`;
-    const brand = "Dedicated"
-    const name = $(element)
-      .find('.productList-title')
-      .text()
-      .trim()
-      .replace(/\s/g, ' ');
-    const price = parseInt(
-      $(element)
-        .find('.productList-price')
-        .text());
-    const photo = $(element)
-        .find('.productList-image img')
+      const link = `https://mudjeans.eu${$(element)
+        .find('.product-title a')
+        .attr('href')}`;
+      const brand = "Mudjeans"
+      const name = $(element)
+        .find('.product-title')
+        .text()
+        .trim()
+        .replace(/\s/g, ' ');
+      const price = parseInt(
+        $(element)
+          .find('.product-price')
+          .first()
+          .text()
+          .replace(/\s|(Buy)|€/g, '')
+          .replace(/,/g, '.'));
+      const photo = $(element)
+        .find('.primary-image img')
         .attr('src');
-    const id = uuidv5(link, uuidv5.URL);
+      const id = uuidv5(link, uuidv5.URL);
 
-    return {id, brand, name, price, photo, link};
+      return {id, brand, name, price, photo, link};
     })
     .get();
 };
@@ -53,7 +55,7 @@ module.exports.scrape_products = async url => {
   return null;
 };
 
- //Scrape all links on the welcome page of the website
+//Scrape all links on the welcome page of the website
 module.exports.scrape_links = async url => {
   const response = await axios(url);
   const {data, status} = response;
@@ -67,17 +69,16 @@ module.exports.scrape_links = async url => {
   return null;
 };
 
-
 const parse_links = data => {
   const $ = cheerio.load(data);
 
-  return $('.mainNavigation-fixedContainer .mainNavigation-link-subMenu-link')
+  return $('.header-navigation--primary .header-nav-list-item')
     .map((i, element) => {
       const link = $(element)
-        .find('.mainNavigation-link-subMenu-link > a[href]')
+        .find('.header-nav-list-item > a[href]')
         .attr('href')
 
       return link;
     })
     .get();
-}; 
+};
